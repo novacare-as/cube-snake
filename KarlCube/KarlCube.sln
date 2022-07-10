@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KarlCube", "KarlCube.csproj", "{F5BB3B87-2A19-474B-8745-AF63DD891847}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F5BB3B87-2A19-474B-8745-AF63DD891847}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5BB3B87-2A19-474B-8745-AF63DD891847}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5BB3B87-2A19-474B-8745-AF63DD891847}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5BB3B87-2A19-474B-8745-AF63DD891847}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
