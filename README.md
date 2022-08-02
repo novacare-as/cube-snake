@@ -16,8 +16,6 @@ Snakekoden var i utgangspunktet laget som en F# demo og er portet over på C#. K
 
 Når man skal lage snake på en kube så krever det en spesiell håndtering av kantene. Matrisene er seriekoblet og fremstår om en lang rektangel 320x64. Når man legger disse sammen som en kube så må man bestemme hvor pikslene skal ende når slangen går over kantene. Spesielt håndtering fra toppen til sidene og motsatt. Det er også en håndtering  når slangen går rundt enden av matrisen (320) og tilbake til start igjen (64). 
 
---- Rammen er 3d printet av Tomas Renaa. 3d modell og print. Kudos! Forrige prototype var skranglete og unøyaktig satt sammen så 3d printingen hjalp med byggekvaliteten. ---
-
 Man skal kunne bevege seg med trådløse BT kontrollere. Lydeffekter må også programmeres inn. 
 
 ## Hva forventes av hackathonet?
