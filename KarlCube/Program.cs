@@ -1,4 +1,5 @@
 ﻿using Iot.Device.LEDMatrix;
+using KarlCube;
 
 var mapping = PinMapping.MatrixBonnetMapping32;
 
@@ -9,6 +10,19 @@ matrix.StartRendering();
 
 do
 {
+    for (var row = 0; row < 32; row++)
+    {
+        for (int column = 0; column < 32; column++)
+        {
+            var color = Countdown.Three[row, column];
+            if (column > 0)
+            {
+                matrix.SetPixel(row, column, (byte)((color / 0xffFF) & 0xff), (byte)((color / 0xff) & 0xff), (byte)(color & 0xff));
+            }
+        }
+    }
+    Thread.Sleep(2000);
+
     for (var x = 0; x < gameCtx.Map.GetLength(0); x++)
     {
         for (var y = 0; y < gameCtx.Map.GetLength(1); y++)

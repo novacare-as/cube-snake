@@ -1,5 +1,3 @@
-using KarlCube;
-
 public class Game
 {
     private const int Matrix = 32;
@@ -12,17 +10,6 @@ public class Game
         for (var row = 0; row < Rows; row++)
             for (var column = 0; column < Cols; column++)
                 map[row, column] = (GameObject.Ground, Direction.None);
-
-        for (var row = 0; row < 32; row++)
-        {
-            for (int column = 0; column < 32; column++)
-            {
-                if (Countdown.Three[row, column] > 0)
-                {
-                    map[row, column] = (GameObject.Graphics, Direction.None);
-                }
-            }
-        }
 
         map[Matrix / 2, Matrix / 2] = (GameObject.Snake, Direction.Up);
         var (foodX, foodY) = CreateFood(map);
