@@ -1,4 +1,4 @@
 public enum GameObject
 {
-    Ground, Snake, Food
+    Ground, Snake, Food, Graphics
 }

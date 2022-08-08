@@ -19,12 +19,19 @@ do
                 case GameObject.Ground:
                     matrix.SetPixel(x, y, byte.MinValue, byte.MinValue, byte.MinValue);
                     break;
+
                 case GameObject.Snake:
                     matrix.SetPixel(x, y, byte.MinValue, byte.MaxValue, byte.MinValue);
                     break;
+
                 case GameObject.Food:
                     matrix.SetPixel(x, y, byte.MaxValue, byte.MinValue, byte.MinValue);
                     break;
+
+                case GameObject.Graphics:
+                    matrix.SetPixel(x, y, byte.MaxValue, byte.MaxValue, byte.MaxValue);
+                    break;
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -38,9 +45,11 @@ do
             case ConsoleKey.Q:
                 Environment.Exit(55);
                 break;
+
             case ConsoleKey.LeftArrow:
                 gameCtx = game.Loop(gameCtx with { Direction = GetDirection.TurnLeft(gameCtx.Direction) });
                 break;
+
             case ConsoleKey.RightArrow:
                 gameCtx = game.Loop(gameCtx with { Direction = GetDirection.TurnRight(gameCtx.Direction) });
                 break;
