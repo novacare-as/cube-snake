@@ -84,6 +84,13 @@ public class Game
                     Score = context.Score + 10,
                     Direction = direction
                 },
+                GameObject.Graphics => context with
+                {
+                    Map = ModifyHitGround(context.Map, (newX, newY), direction),
+                    Position = (newX, newY),
+                    StepsLeft = context.StepsLeft - 1,
+                    Direction = direction
+                }
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
