@@ -166,6 +166,7 @@ public class Game
         var (foodX, foodY) = CreateFood(context.Map);
         context.Map[foodX, foodY] = (GameObject.Food, Direction.None);
         context.AudioPlayer.Play($"{_audioPath}PointGiven.wav");
+        Console.WriteLine($"Trying to play sound in directory: {_audioPath}PointGiven.wav");
         return context.Map;
     }
 
