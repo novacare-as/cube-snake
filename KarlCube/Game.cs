@@ -55,7 +55,7 @@ public class Game
             {
                 GameObject.Ground => context with
                 {
-                    Map = ModifyHitGround(context.Map, (newX, newY), direction),
+                    Map = ModifyHitGround(context, (newX, newY), direction),
                     Position = (newX, newY),
                     StepsLeft = context.StepsLeft - 1,
                     Direction = direction
@@ -68,7 +68,7 @@ public class Game
                 },
                 GameObject.Food => context with
                 {
-                    Map = ModifyHitFood(context.Map, (newX, newY), direction),
+                    Map = ModifyHitFood(context, (newX, newY), direction),
                     Position = (newX, newY),
                     StepsLeft = context.StepsLeft + 100,
                     Score = context.Score + 10,
@@ -157,20 +157,22 @@ public class Game
         return (newX, newY, direction);
     }
 
-    private (GameObject, Direction)[,] ModifyHitFood((GameObject, Direction)[,] map, (int x, int y) position, Direction direction)
+    private (GameObject, Direction)[,] ModifyHitFood(GameContext context, (int x, int y) position,
+        Direction direction)
     {
-        map[position.x, position.y] = (GameObject.Snake, direction);
-        var (foodX, foodY) = CreateFood(map);
-        map[foodX, foodY] = (GameObject.Food, Direction.None);
-        return map;
+        context.Map[position.x, position.y] = (GameObject.Snake, direction);
+        var (foodX, foodY) = CreateFood(context.Map);
+        context.Map[foodX, foodY] = (GameObject.Food, Direction.None);
+        return context.Map;
     }
 
-    private static (GameObject, Direction)[,] ModifyHitGround((GameObject, Direction)[,] map, (int x, int y) position, Direction direction)
+    private static (GameObject, Direction)[,] ModifyHitGround(GameContext context, (int x, int y) position,
+        Direction direction)
     {
-        map[position.x, position.y] = (GameObject.Snake, direction);
-        var (tailX, tailY) = FindTail(map, position);
-        map[tailX, tailY] = (GameObject.Ground, Direction.None);
-        return map;
+        context.Map[position.x, position.y] = (GameObject.Snake, direction);
+        var (tailX, tailY) = FindTail(context.Map, position);
+        context.Map[tailX, tailY] = (GameObject.Ground, Direction.None);
+        return context.Map;
     }
 
     private static (int, int) FindTail((GameObject, Direction)[,] map, (int x, int y) position)
