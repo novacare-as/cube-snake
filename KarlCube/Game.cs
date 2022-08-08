@@ -90,7 +90,7 @@ public class Game
                     Position = (newX, newY),
                     StepsLeft = context.StepsLeft - 1,
                     Direction = direction
-                }
+                },
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
