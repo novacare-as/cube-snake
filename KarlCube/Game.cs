@@ -6,7 +6,7 @@ public class Game
     private const int Rows = Matrix*5;
     private const int Cols = Matrix;
 
-    private string _audioPath = $"{Directory.GetCurrentDirectory()}\\Audio\\";
+    private string _audioPath = $"{Directory.GetCurrentDirectory()}/Audio/";
 
     public GameContext CreateGameContext()
     {
@@ -166,7 +166,7 @@ public class Game
         var (foodX, foodY) = CreateFood(context.Map);
         context.Map[foodX, foodY] = (GameObject.Food, Direction.None);
         context.AudioPlayer.Play($"{_audioPath}PointGiven.wav");
-        Console.WriteLine($"Trying to play sound in directory: {_audioPath}PointGiven.wav");
+        Console.WriteLine($"Trying to play sound in directory: :{_audioPath}PointGiven.wav");
         return context.Map;
     }
 
