@@ -6,6 +6,8 @@ public class Game
     private const int Rows = Matrix*5;
     private const int Cols = Matrix;
 
+    private string _audioPath = $"{Directory.GetCurrentDirectory()}\\Audio\\";
+
     public GameContext CreateGameContext()
     {
         var map = new (GameObject, Direction)[Rows,Cols];
@@ -163,6 +165,7 @@ public class Game
         context.Map[position.x, position.y] = (GameObject.Snake, direction);
         var (foodX, foodY) = CreateFood(context.Map);
         context.Map[foodX, foodY] = (GameObject.Food, Direction.None);
+        context.AudioPlayer.Play($"{_audioPath}PointGiven.wav");
         return context.Map;
     }
 
