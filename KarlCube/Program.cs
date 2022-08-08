@@ -1,4 +1,5 @@
-﻿using Iot.Device.LEDMatrix;
+﻿using System.Runtime.InteropServices;
+using Iot.Device.LEDMatrix;
 
 var mapping = PinMapping.MatrixBonnetMapping32;
 

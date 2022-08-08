@@ -10,7 +10,14 @@
 
     <ItemGroup>
       <PackageReference Include="Iot.Device.Bindings" Version="2.1.0" />
+      <PackageReference Include="NetCoreAudio" Version="1.7.0" />
       <PackageReference Include="System.Device.Gpio" Version="2.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Audio\PointGiven.wav">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

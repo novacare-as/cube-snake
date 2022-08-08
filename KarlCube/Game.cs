@@ -1,3 +1,5 @@
+using NetCoreAudio;
+
 public class Game
 {
     private const int Matrix = 32;
@@ -21,7 +23,8 @@ public class Game
             Position = (Matrix/2, Matrix/2),
             Score = 0,
             StepsLeft = 400,
-            Dead = false
+            Dead = false,
+            AudioPlayer = new Player()
         };
     }
 

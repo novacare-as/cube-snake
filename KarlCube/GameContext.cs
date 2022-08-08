@@ -6,4 +6,6 @@ public record GameContext
     public int Score { get; init; }
     public int StepsLeft { get; init; }
     public bool Dead { get; init; }
+    
+    public NetCoreAudio.Player AudioPlayer { get; set; }
 }
