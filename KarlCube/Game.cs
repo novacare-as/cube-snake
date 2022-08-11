@@ -1,17 +1,16 @@
 public class Game
 {
-    private const int Matrix = 32;
+    private const int Matrix = 64;
     private const int Rows = Matrix*5;
     private const int Cols = Matrix;
 
     public GameContext CreateGameContext()
     {
         var map = new (GameObject, Direction)[Rows,Cols];
-        for (var row = 0; row < Rows; row++)
-        for (var column = 0; column < Cols; column++)
-            map[row, column] = (GameObject.Ground, Direction.None);
 
         map[Matrix/2, Matrix/2] = (GameObject.Snake, Direction.Up);
+        map[(Matrix/2)+1, Matrix/2] = (GameObject.Snake, Direction.Up);
+        map[(Matrix/2)+2, Matrix/2] = (GameObject.Snake, Direction.Up);
         var (foodX, foodY) = CreateFood(map);
         map[foodX, foodY] = (GameObject.Food, Direction.None);
         return new GameContext
@@ -20,7 +19,7 @@ public class Game
             Direction = Direction.Up,
             Position = (Matrix/2, Matrix/2),
             Score = 0,
-            StepsLeft = 400,
+            StepsLeft = 5000,
             Dead = false
         };
     }
@@ -98,7 +97,7 @@ public class Game
             || (y == Matrix-1 && newY == Matrix) // From top and goes over the edge to side 32-64
             || newX is -1 or Matrix) // From top to 128-160 (if x is 32) or 64-96 (if x is -1)
         {
-            var side = (int) Math.Floor((decimal) (x / 32));
+            var side = (int) Math.Floor((decimal) (x / Matrix));
             if (side is 0)
             {
                 switch (newY)
@@ -137,7 +136,7 @@ public class Game
             {
                 if (newY == -1)
                 {
-                    return (Matrix-1, Math.Abs(31 - (newX - Matrix*2)), Direction.Up);
+                    return (Matrix-1, Math.Abs((Matrix-1) - (newX - Matrix*2)), Direction.Up);
                 }
             }
             

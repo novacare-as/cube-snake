@@ -1,22 +1,12 @@
 ﻿using Gamepad;
 using Iot.Device.LEDMatrix;
 
-var mapping = PinMapping.MatrixBonnetMapping32;
+var mapping = PinMapping.MatrixBonnetMapping64;
 
-var matrix = new RGBLedMatrix(mapping, 160, 32);
+var matrix = new RGBLedMatrix(mapping, 320, 64);
 var game = new Game();
 var gameCtx = game.CreateGameContext();
 matrix.StartRendering();
-
-
-using (var gamepad = new GamepadController("/dev/input/event7")) 
-{
-    // Configure this if you want to get events when the state of a button changes
-    gamepad.ButtonChanged += (object sender, ButtonEventArgs e) =>
-    {
-        Console.WriteLine($"Button {e.Button} Pressed: {e.Pressed}");
-    };
-}
 
 do
 {
