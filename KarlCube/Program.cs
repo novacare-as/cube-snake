@@ -11,6 +11,7 @@ var gameCtx = game.CreateGameContext();
 matrix.StartRendering();
 
 var gamepad = new GamepadController();
+
 gamepad.ButtonChanged += (object sender, ButtonEventArgs e) =>
 {
     Console.WriteLine($"Button {e.Button} Pressed: {e.Pressed}");
@@ -18,7 +19,8 @@ gamepad.ButtonChanged += (object sender, ButtonEventArgs e) =>
 
 gamepad.AxisChanged += (object sender, AxisEventArgs e) =>
 {
-    if (e.Axis is not (1 or 2)) return;
+
+    if (e.Axis is not (0 or 2)) return;
     switch (e.Value)
     {
         case 32767:
@@ -56,14 +58,16 @@ do
             }
         }
     }
-    Thread.Sleep(50);
+    Thread.Sleep(30);
     if (cubeCtx.IsTurningLeft)
     {
         gameCtx = game.Loop(gameCtx with { Direction = GetDirection.TurnLeft(gameCtx.Direction) });
+        cubeCtx.IsTurningLeft = false;
     }
     else if (cubeCtx.IsTurningRight)
     {
         gameCtx = game.Loop(gameCtx with { Direction = GetDirection.TurnRight(gameCtx.Direction) });
+        cubeCtx.IsTurningRight= false;
     }
     else
     {
