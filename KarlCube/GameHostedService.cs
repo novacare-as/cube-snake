@@ -27,6 +27,7 @@ public class GameHostedService : IHostedService
         {
             if (e.Button == 9 && e.Pressed && _cubeCtx.State == State.Idle)
             {
+                Task.Run(PlayGame, cancellationToken);
                 PlayGame();
             }
         };
@@ -59,7 +60,7 @@ public class GameHostedService : IHostedService
         return Task.CompletedTask;
     }
 
-    private void PlayGame()
+    private Task PlayGame()
     {
         _cubeCtx.State = State.Playing;
         var gameCtx = _game.CreateGameContext();
@@ -76,7 +77,7 @@ public class GameHostedService : IHostedService
                             _matrix.SetPixel(x, y, byte.MinValue, byte.MinValue, byte.MinValue);
                             break;
                         case GameObject.Snake:
-                            _matrix.SetPixel(x, y, byte.MinValue, byte.MaxValue, byte.MinValue);
+                            _matrix.SetPixel(x, y, byte.MinValue, byte.MinValue, byte.MaxValue);
                             break;
                         case GameObject.Food:
                             _matrix.SetPixel(x, y, byte.MaxValue, byte.MinValue, byte.MinValue);
@@ -104,5 +105,6 @@ public class GameHostedService : IHostedService
         } while (!gameCtx.Dead);
 
         _cubeCtx.State = State.Idle;
+        return Task.CompletedTask;
     }
 }
