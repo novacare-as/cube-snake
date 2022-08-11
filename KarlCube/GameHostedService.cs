@@ -28,7 +28,6 @@ public class GameHostedService : IHostedService
             if (e.Button == 9 && e.Pressed && _cubeCtx.State == State.Idle)
             {
                 Task.Run(PlayGame, cancellationToken);
-                PlayGame();
             }
         };
 

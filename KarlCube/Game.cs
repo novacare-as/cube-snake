@@ -21,7 +21,7 @@ public class Game
             Direction = Direction.Up,
             Position = (Matrix/2, Matrix/2),
             Score = 0,
-            StepsLeft = 5000,
+            StepsLeft = 500,
             Dead = false
         };
     }
