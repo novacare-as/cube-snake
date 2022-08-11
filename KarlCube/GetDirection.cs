@@ -1,3 +1,5 @@
+namespace KarlCube;
+
 public static class GetDirection {
     public static Direction TurnLeft(Direction currentDirection)
         => currentDirection switch

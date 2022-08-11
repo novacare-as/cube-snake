@@ -1,3 +1,5 @@
+namespace KarlCube;
+
 public class Game
 {
     private const int Matrix = 64;

@@ -1,3 +1,5 @@
+using KarlCube;
+
 public record GameContext
 {
     public (GameObject, Direction)[,] Map { get; init; } = null!;
