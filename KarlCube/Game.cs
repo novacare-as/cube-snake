@@ -11,8 +11,8 @@ public class Game
         var map = new (GameObject, Direction)[Rows,Cols];
 
         map[Matrix/2, Matrix/2] = (GameObject.Snake, Direction.Up);
-        map[(Matrix/2)+1, Matrix/2] = (GameObject.Snake, Direction.Up);
-        map[(Matrix/2)+2, Matrix/2] = (GameObject.Snake, Direction.Up);
+        map[Matrix/2+1, Matrix/2] = (GameObject.Snake, Direction.Up);
+        map[Matrix/2+2, Matrix/2] = (GameObject.Snake, Direction.Up);
         var (foodX, foodY) = CreateFood(map);
         map[foodX, foodY] = (GameObject.Food, Direction.None);
         return new GameContext
@@ -75,9 +75,9 @@ public class Game
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
-        catch (IndexOutOfRangeException e)
+        catch (Exception e)
         {
-            return context with { Dead = true };
+            return context with {Dead = true};
         }
     }
 
@@ -138,7 +138,7 @@ public class Game
             {
                 if (newY == -1)
                 {
-                    return (Matrix-1, Math.Abs((Matrix-1) - (newX - Matrix*2)), Direction.Up);
+                    return (Matrix-1, Math.Abs(Matrix-1 - (newX - Matrix*2)), Direction.Up);
                 }
             }
             
