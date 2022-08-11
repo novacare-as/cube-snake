@@ -9,9 +9,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Gamepad" Version="1.0.1" />
-      <PackageReference Include="Iot.Device.Bindings" Version="2.1.0" />
-      <PackageReference Include="System.Device.Gpio" Version="2.1.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
+        <PackageReference Include="Gamepad" Version="1.0.1" />
+        <PackageReference Include="Iot.Device.Bindings" Version="2.1.0" />
+        <PackageReference Include="System.Device.Gpio" Version="2.1.0" />
     </ItemGroup>
 
 </Project>
