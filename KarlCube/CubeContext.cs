@@ -10,6 +10,5 @@ public class CubeContext
 public enum State
 {
     Idle,
-    Countdown,
     Playing
 }

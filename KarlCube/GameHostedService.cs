@@ -1,3 +1,4 @@
+using System.Drawing;
 using Gamepad;
 using Iot.Device.LEDMatrix;
 using Microsoft.Extensions.Hosting;
@@ -49,6 +50,7 @@ public class GameHostedService : IHostedService
             }
         };
         _matrix.StartRendering();
+        _matrix.DrawBitmap(0,0, new Bitmap("images/Companion_Cube.bmp"));
         return Task.CompletedTask;
     }
 
@@ -62,6 +64,7 @@ public class GameHostedService : IHostedService
     private Task PlayGame()
     {
         _cubeCtx.State = State.Playing;
+        
         var gameCtx = _game.CreateGameContext();
         do
         {
