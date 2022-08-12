@@ -15,4 +15,15 @@
         <PackageReference Include="System.Device.Gpio" Version="2.1.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="images\Companion_Cube.bmp" />
+      <Content Include="images\Companion_Cube.bmp">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="fonts\font-14.bdf" />
+      <Content Include="fonts\font-14.bdf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
 </Project>
