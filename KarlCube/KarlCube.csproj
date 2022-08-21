@@ -9,6 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="CliWrap" Version="3.4.4" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
         <PackageReference Include="Gamepad" Version="1.0.1" />
         <PackageReference Include="Iot.Device.Bindings" Version="2.1.0" />
@@ -16,12 +17,14 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="images\Companion_Cube.bmp" />
-      <Content Include="images\Companion_Cube.bmp">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-      <None Remove="fonts\font-14.bdf" />
-      <Content Include="fonts\font-14.bdf">
+      <Reference Include="RGBLedMatrix">
+        <HintPath>RGBLedMatrix.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="librgbmatrix.so" />
+      <Content Include="librgbmatrix.so">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
     </ItemGroup>

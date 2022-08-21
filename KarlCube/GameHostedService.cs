@@ -1,8 +1,9 @@
-using System.Drawing;
+using CliWrap;
 using Gamepad;
-using Iot.Device.LEDMatrix;
+using rpi_rgb_led_matrix_sharp;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Color = rpi_rgb_led_matrix_sharp.Color;
 
 namespace KarlCube;
 
@@ -12,57 +13,96 @@ public class GameHostedService : IHostedService
     private readonly RGBLedMatrix _matrix;
     private readonly Game _game;
     private readonly CubeContext _cubeCtx;
-    private readonly GamepadController _gamepad;
+    private GamepadController _gamepad;
 
     public GameHostedService(ILogger<GameHostedService> logger)
     {
         _logger = logger;
-        _matrix = new RGBLedMatrix(PinMapping.MatrixBonnetMapping64, 320, 64);
+        _matrix = new RGBLedMatrix(64, 5, 1);
         _game = new Game();
         _cubeCtx = new CubeContext();
-        _gamepad = new GamepadController();
     }
-    public Task StartAsync(CancellationToken cancellationToken)
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _gamepad.ButtonChanged += (_, e) =>
-        {
-            if (e.Button == 9 && e.Pressed && _cubeCtx.State == State.Idle)
-            {
-                Task.Run(PlayGame, cancellationToken);
-            }
-        };
+        //await ScreenSaver();
+        ConnectGamepad(cancellationToken);
+    }
 
-        _gamepad.AxisChanged += (_, e) =>
+    private static async Task ScreenSaver()
+    {
+        try
         {
+            var clt = new CancellationTokenSource();
+            clt.CancelAfter(10000);
+            var task = Cli.Wrap("/home/pi/rpi-rgb-led-matrix/utils/led-image-viewer")
+                .WithArguments(new[]
+                {
+                    "/home/pi/workshop/cube-snake/KarlCube/images/this-is-fine.gif",
+                    "--led-rows=64",
+                    "--led-cols=64",
+                    "--led-gpio-mapping=adafruit-hat-pwm",
+                    "--led-no-hardware-pulse",
+                    "--led-slowdown-gpio=4",
+                    "--led-brightness=20"
+                }).ExecuteAsync(clt.Token);
 
-            if (e.Axis is not (0 or 2)) return;
-            switch (e.Value)
+            Console.WriteLine($"{task.ProcessId}");
+            await task;
+        }
+        catch (OperationCanceledException e)
+        {
+        }
+    }
+
+    private void ConnectGamepad(CancellationToken cancellationToken)
+    {
+        try
+        {
+            _gamepad = new GamepadController();
+            _gamepad.ButtonChanged += (_, e) =>
             {
-                case 32767:
-                    _cubeCtx.IsTurningLeft = true;
-                    return;
-                case -32767:
-                    _cubeCtx.IsTurningRight = true;
-                    return;
-                default:
-                    _cubeCtx.IsTurningRight = _cubeCtx.IsTurningLeft = false;
-                    break;
-            }
-        };
-        _matrix.StartRendering();
-        _matrix.DrawBitmap(0,0, new Bitmap("images/Companion_Cube.bmp"));
-        return Task.CompletedTask;
+                if (e.Button == 9 && e.Pressed && _cubeCtx.State == State.Idle)
+                {
+                    Task.Run(PlayGame, cancellationToken);
+                }
+            };
+
+            _gamepad.AxisChanged += (_, e) =>
+            {
+                if (e.Axis is not (0 or 2)) return;
+                switch (e.Value)
+                {
+                    case 32767:
+                        _cubeCtx.IsTurningLeft = true;
+                        return;
+                    case -32767:
+                        _cubeCtx.IsTurningRight = true;
+                        return;
+                    default:
+                        _cubeCtx.IsTurningRight = _cubeCtx.IsTurningLeft = false;
+                        break;
+                }
+            };
+        }
+        catch (ArgumentException e)
+        {
+            _logger.LogWarning(e, "Controller not found... Retrying in 10 sec");
+            cancellationToken.WaitHandle.WaitOne(20000);
+            if (cancellationToken.IsCancellationRequested) return;
+            ConnectGamepad(cancellationToken);
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _matrix.StopRendering();
+        _matrix.Dispose();
         _gamepad.Dispose();
         return Task.CompletedTask;
     }
 
     private Task PlayGame()
     {
+        var canvas = _matrix.CreateOffscreenCanvas();
         _cubeCtx.State = State.Playing;
         
         var gameCtx = _game.CreateGameContext();
@@ -76,13 +116,13 @@ public class GameHostedService : IHostedService
                     switch (obj)
                     {
                         case GameObject.Ground:
-                            _matrix.SetPixel(x, y, byte.MinValue, byte.MinValue, byte.MinValue);
+                            canvas.SetPixel(x, y, new Color(0, 0, 0));
                             break;
                         case GameObject.Snake:
-                            _matrix.SetPixel(x, y, byte.MinValue, byte.MinValue, byte.MaxValue);
+                            canvas.SetPixel(x, y, new Color(0, 255, 0));
                             break;
                         case GameObject.Food:
-                            _matrix.SetPixel(x, y, byte.MaxValue, byte.MinValue, byte.MinValue);
+                            canvas.SetPixel(x, y, new Color(255, 0, 0));
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -104,8 +144,10 @@ public class GameHostedService : IHostedService
             {
                 gameCtx = _game.Loop(gameCtx);
             }
+            canvas = _matrix.SwapOnVsync(canvas);
         } while (!gameCtx.Dead);
-
+        
+        canvas.Clear();
         _cubeCtx.State = State.Idle;
         return Task.CompletedTask;
     }
