@@ -18,7 +18,19 @@ public class GameHostedService : IHostedService
     public GameHostedService(ILogger<GameHostedService> logger)
     {
         _logger = logger;
-        _matrix = new RGBLedMatrix(64, 5, 1);
+        _matrix = new RGBLedMatrix(new RGBLedMatrixOptions
+        {
+            Cols = 64,
+            Rows = 64,
+            ChainLength = 5,
+            HardwareMapping = "adafruit-hat-pwm",
+            DisableHardwarePulsing = true,
+            Brightness = 50,
+            PwmDitherBits = 1,
+            PwmLsbNanoseconds = 50,
+            PwmBits = 7,
+            GpioSlowdown = 3
+        });
         _game = new Game();
         _cubeCtx = new CubeContext();
     }
