@@ -1,5 +1,6 @@
 using CliWrap;
 using Gamepad;
+using MassTransit;
 using rpi_rgb_led_matrix_sharp;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -10,13 +11,18 @@ namespace KarlCube;
 public class GameHostedService : IHostedService
 {
     private readonly ILogger<GameHostedService> _logger;
+    private readonly IBus _bus;
     private readonly Game _game;
     private readonly CubeContext _cubeCtx;
     private GamepadController _gamepad;
+    private GameContext _gameCtx;
 
-    public GameHostedService(ILogger<GameHostedService> logger)
+    public GameHostedService(
+        ILogger<GameHostedService> logger,
+        IBus bus)
     {
         _logger = logger;
+        _bus = bus;
         _game = new Game();
         _cubeCtx = new CubeContext();
     }
@@ -101,6 +107,7 @@ public class GameHostedService : IHostedService
     {
         
         _cubeCtx.State = State.Playing;
+        await _bus.Publish(new GameStarted());
 
         await Cli.Wrap("/home/pi/rpi-rgb-led-matrix/utils/led-image-viewer")
             .WithArguments(new[]
@@ -131,14 +138,16 @@ public class GameHostedService : IHostedService
         });
         
         var canvas = matrix.CreateOffscreenCanvas();
-        var gameCtx = _game.CreateGameContext();
+        _gameCtx = _game.CreateGameContext();
+        
+        await Task.Run(RunStatusTick);
         do
         {
-            for (var x = 0; x < gameCtx.Map.GetLength(0); x++)
+            for (var x = 0; x < _gameCtx.Map.GetLength(0); x++)
             {
-                for (var y = 0; y < gameCtx.Map.GetLength(1); y++)
+                for (var y = 0; y < _gameCtx.Map.GetLength(1); y++)
                 {
-                    var (obj, _) = gameCtx.Map[x, y];
+                    var (obj, _) = _gameCtx.Map[x, y];
                     switch (obj)
                     {
                         case GameObject.Ground:
@@ -158,23 +167,25 @@ public class GameHostedService : IHostedService
             Thread.Sleep(20);
             if (_cubeCtx.IsTurningLeft)
             {
-                gameCtx = _game.Loop(gameCtx with { Direction = GetDirection.TurnLeft(gameCtx.Direction) });
+                _gameCtx = _game.Loop(_gameCtx with { Direction = GetDirection.TurnLeft(_gameCtx.Direction) });
                 _cubeCtx.IsTurningLeft = false;
             }
             else if (_cubeCtx.IsTurningRight)
             {
-                gameCtx = _game.Loop(gameCtx with { Direction = GetDirection.TurnRight(gameCtx.Direction) });
+                _gameCtx = _game.Loop(_gameCtx with { Direction = GetDirection.TurnRight(_gameCtx.Direction) });
                 _cubeCtx.IsTurningRight= false;
             }
             else
             {
-                gameCtx = _game.Loop(gameCtx);
+                _gameCtx = _game.Loop(_gameCtx);
             }
             canvas = matrix.SwapOnVsync(canvas);
-        } while (!gameCtx.Dead);
+        } while (!_gameCtx.Dead);
         
         canvas.Clear();
         matrix.Dispose();
+        
+        await _bus.Publish(new GameEnded(_gameCtx.Score));
 
         await Cli.Wrap("/home/pi/rpi-rgb-led-matrix/utils/led-image-viewer")
             .WithArguments(new[]
@@ -192,4 +203,17 @@ public class GameHostedService : IHostedService
 
         _cubeCtx.State = State.Idle;
     }
+
+    private async Task RunStatusTick()
+    {
+        do
+        {
+            await _bus.Publish(new StatusTick(_gameCtx.Score, _gameCtx.StepsLeft));
+            Thread.Sleep(1000);
+        } while (!_gameCtx.Dead);
+    }
 }
+
+public record GameStarted;
+public record StatusTick(int Score, int StepsLeft);
+public record GameEnded(int Score);
