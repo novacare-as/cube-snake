@@ -10,7 +10,6 @@ namespace KarlCube;
 public class GameHostedService : IHostedService
 {
     private readonly ILogger<GameHostedService> _logger;
-    private readonly RGBLedMatrix _matrix;
     private readonly Game _game;
     private readonly CubeContext _cubeCtx;
     private GamepadController _gamepad;
@@ -18,13 +17,12 @@ public class GameHostedService : IHostedService
     public GameHostedService(ILogger<GameHostedService> logger)
     {
         _logger = logger;
-        _matrix = new RGBLedMatrix(64, 5, 1);
         _game = new Game();
         _cubeCtx = new CubeContext();
     }
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        //await ScreenSaver();
+        await ScreenSaver();
         ConnectGamepad(cancellationToken);
     }
 
@@ -42,8 +40,8 @@ public class GameHostedService : IHostedService
                     "--led-cols=64",
                     "--led-gpio-mapping=adafruit-hat-pwm",
                     "--led-no-hardware-pulse",
-                    "--led-slowdown-gpio=4",
-                    "--led-brightness=20"
+                    "--led-slowdown-gpio=3",
+                    "--led-brightness=10"
                 }).ExecuteAsync(clt.Token);
 
             Console.WriteLine($"{task.ProcessId}");
@@ -95,16 +93,44 @@ public class GameHostedService : IHostedService
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _matrix.Dispose();
         _gamepad.Dispose();
         return Task.CompletedTask;
     }
 
-    private Task PlayGame()
+    private async Task PlayGame()
     {
-        var canvas = _matrix.CreateOffscreenCanvas();
-        _cubeCtx.State = State.Playing;
         
+        _cubeCtx.State = State.Playing;
+
+        await Cli.Wrap("/home/pi/rpi-rgb-led-matrix/utils/led-image-viewer")
+            .WithArguments(new[]
+            {
+                "-l 1",
+                "-D 100",
+                "/home/pi/workshop/cube-snake/KarlCube/images/countdown.gif",
+                "--led-rows=64",
+                "--led-cols=64",
+                "--led-gpio-mapping=adafruit-hat-pwm",
+                "--led-no-hardware-pulse",
+                "--led-slowdown-gpio=3",
+                "--led-brightness=20"
+            }).ExecuteAsync();
+
+        var matrix = new RGBLedMatrix(new RGBLedMatrixOptions
+        {
+            Cols = 64,
+            Rows = 64,
+            ChainLength = 5,
+            HardwareMapping = "adafruit-hat-pwm",
+            DisableHardwarePulsing = true,
+            Brightness = 50,
+            PwmDitherBits = 1,
+            PwmLsbNanoseconds = 50,
+            PwmBits = 7,
+            GpioSlowdown = 3
+        });
+        
+        var canvas = matrix.CreateOffscreenCanvas();
         var gameCtx = _game.CreateGameContext();
         do
         {
@@ -129,7 +155,7 @@ public class GameHostedService : IHostedService
                     }
                 }
             }
-            Thread.Sleep(30);
+            Thread.Sleep(20);
             if (_cubeCtx.IsTurningLeft)
             {
                 gameCtx = _game.Loop(gameCtx with { Direction = GetDirection.TurnLeft(gameCtx.Direction) });
@@ -144,11 +170,26 @@ public class GameHostedService : IHostedService
             {
                 gameCtx = _game.Loop(gameCtx);
             }
-            canvas = _matrix.SwapOnVsync(canvas);
+            canvas = matrix.SwapOnVsync(canvas);
         } while (!gameCtx.Dead);
         
         canvas.Clear();
+        matrix.Dispose();
+
+        await Cli.Wrap("/home/pi/rpi-rgb-led-matrix/utils/led-image-viewer")
+            .WithArguments(new[]
+            {
+                "-l 2",
+                "-D 100",
+                "/home/pi/workshop/cube-snake/KarlCube/images/gameover.gif",
+                "--led-rows=64",
+                "--led-cols=64",
+                "--led-gpio-mapping=adafruit-hat-pwm",
+                "--led-no-hardware-pulse",
+                "--led-slowdown-gpio=3",
+                "--led-brightness=15"
+            }).ExecuteAsync();
+
         _cubeCtx.State = State.Idle;
-        return Task.CompletedTask;
     }
 }

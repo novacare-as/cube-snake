@@ -21,7 +21,7 @@ public class Game
             Direction = Direction.Up,
             Position = (Matrix/2, Matrix/2),
             Score = 0,
-            StepsLeft = 500,
+            StepsLeft = 800,
             Dead = false
         };
     }
@@ -68,7 +68,7 @@ public class Game
                 {
                     Map = ModifyHitFood(context.Map, (newX, newY), direction),
                     Position = (newX, newY),
-                    StepsLeft = context.StepsLeft + 100,
+                    StepsLeft = context.StepsLeft + 200,
                     Score = context.Score + 10,
                     Direction = direction
                 },
