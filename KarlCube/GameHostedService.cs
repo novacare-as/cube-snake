@@ -15,49 +15,29 @@ public class GameHostedService : IHostedService
     private readonly IBus _bus;
     private readonly Game _game;
     private readonly CubeContext _cubeCtx;
+    private readonly ScreenSaver _screenSaver;
     private GamepadController _gamepad;
     private GameContext _gameCtx;
 
     public GameHostedService(
         ILogger<GameHostedService> logger,
-        IBus bus)
+        IBus bus,
+        CubeContext cubeContext,
+        ScreenSaver screenSaver)
     {
         _logger = logger;
         _bus = bus;
+        _cubeCtx = cubeContext;
+        _screenSaver = screenSaver;
         _game = new Game();
-        _cubeCtx = new CubeContext();
     }
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
-        //await ScreenSaver();
+        Task.Run(_screenSaver.StartCycle, cancellationToken);
         ConnectGamepad(cancellationToken);
+        return Task.CompletedTask;
     }
-
-    private static async Task ScreenSaver()
-    {
-        try
-        {
-            var clt = new CancellationTokenSource();
-            clt.CancelAfter(10000);
-            var task = Cli.Wrap("/home/pi/rpi-rgb-led-matrix/utils/led-image-viewer")
-                .WithArguments(new[]
-                {
-                    "/home/pi/workshop/cube-snake/KarlCube/images/this-is-fine.gif",
-                    "--led-rows=64",
-                    "--led-cols=64",
-                    "--led-gpio-mapping=adafruit-hat-pwm",
-                    "--led-slowdown-gpio=3",
-                    "--led-brightness=10"
-                }).ExecuteAsync(clt.Token);
-
-            Console.WriteLine($"{task.ProcessId}");
-            await task;
-        }
-        catch (OperationCanceledException e)
-        {
-        }
-    }
-
+    
     private void ConnectGamepad(CancellationToken cancellationToken)
     {
         try
@@ -105,8 +85,8 @@ public class GameHostedService : IHostedService
 
     private async Task PlayGame()
     {
-        
         _cubeCtx.State = State.Playing;
+        _screenSaver.Dispose();
         await _bus.Publish(new GameStarted());
 
         await Cli.Wrap("/home/pi/rpi-rgb-led-matrix/utils/led-image-viewer")
@@ -202,6 +182,7 @@ public class GameHostedService : IHostedService
             }).ExecuteAsync();
 
         _cubeCtx.State = State.Idle;
+        Task.Run(_screenSaver.StartCycle);
     }
 
     private async Task RunStatusTick()

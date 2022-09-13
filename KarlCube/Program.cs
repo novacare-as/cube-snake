@@ -15,6 +15,8 @@ var host = Host.CreateDefaultBuilder(args)
             });
         });
         services.AddHostedService<GameHostedService>();
+        services.AddSingleton<CubeContext>();
+        services.AddSingleton<ScreenSaver>();
     })
     .Build();
 
