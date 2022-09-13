@@ -44,7 +44,6 @@ public class Game
 
         var (newX, newY, direction) = FindNextPosition((x, y), (nx, ny), context.Direction);
         
-        Console.Write($"Direction: {direction}, x: {newX}, y: {newY}\n");
         try
         {
             var (obj, _) = context.Map[newX, newY];

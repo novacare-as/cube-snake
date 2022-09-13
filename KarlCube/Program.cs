@@ -11,8 +11,7 @@ var host = Host.CreateDefaultBuilder(args)
             x.SetKebabCaseEndpointNameFormatter();
             x.UsingAzureServiceBus((context,cfg) =>
             {
-                cfg.Host("your connection string");
-                cfg.ConfigureEndpoints(context);
+                cfg.Host("");
             });
         });
         services.AddHostedService<GameHostedService>();

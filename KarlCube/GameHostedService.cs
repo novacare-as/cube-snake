@@ -4,6 +4,7 @@ using MassTransit;
 using rpi_rgb_led_matrix_sharp;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Cube.Contracts;
 using Color = rpi_rgb_led_matrix_sharp.Color;
 
 namespace KarlCube;
@@ -28,7 +29,7 @@ public class GameHostedService : IHostedService
     }
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        await ScreenSaver();
+        //await ScreenSaver();
         ConnectGamepad(cancellationToken);
     }
 
@@ -45,7 +46,6 @@ public class GameHostedService : IHostedService
                     "--led-rows=64",
                     "--led-cols=64",
                     "--led-gpio-mapping=adafruit-hat-pwm",
-                    "--led-no-hardware-pulse",
                     "--led-slowdown-gpio=3",
                     "--led-brightness=10"
                 }).ExecuteAsync(clt.Token);
@@ -90,8 +90,8 @@ public class GameHostedService : IHostedService
         }
         catch (ArgumentException e)
         {
-            _logger.LogWarning(e, "Controller not found... Retrying in 10 sec");
-            cancellationToken.WaitHandle.WaitOne(20000);
+            _logger.LogWarning(e, "Controller not found... Retrying in 5 sec");
+            cancellationToken.WaitHandle.WaitOne(5000);
             if (cancellationToken.IsCancellationRequested) return;
             ConnectGamepad(cancellationToken);
         }
@@ -118,9 +118,9 @@ public class GameHostedService : IHostedService
                 "--led-rows=64",
                 "--led-cols=64",
                 "--led-gpio-mapping=adafruit-hat-pwm",
-                "--led-no-hardware-pulse",
                 "--led-slowdown-gpio=3",
-                "--led-brightness=20"
+                "--led-brightness=20",
+                "--led-no-drop-privs"
             }).ExecuteAsync();
 
         var matrix = new RGBLedMatrix(new RGBLedMatrixOptions
@@ -129,18 +129,18 @@ public class GameHostedService : IHostedService
             Rows = 64,
             ChainLength = 5,
             HardwareMapping = "adafruit-hat-pwm",
-            DisableHardwarePulsing = true,
             Brightness = 50,
             PwmDitherBits = 1,
             PwmLsbNanoseconds = 50,
             PwmBits = 7,
-            GpioSlowdown = 3
+            GpioSlowdown = 3,
+            DropPrivileges = false
         });
         
         var canvas = matrix.CreateOffscreenCanvas();
         _gameCtx = _game.CreateGameContext();
         
-        await Task.Run(RunStatusTick);
+        Task.Run(RunStatusTick);
         do
         {
             for (var x = 0; x < _gameCtx.Map.GetLength(0); x++)
@@ -164,7 +164,7 @@ public class GameHostedService : IHostedService
                     }
                 }
             }
-            Thread.Sleep(20);
+            await Task.Delay(20);
             if (_cubeCtx.IsTurningLeft)
             {
                 _gameCtx = _game.Loop(_gameCtx with { Direction = GetDirection.TurnLeft(_gameCtx.Direction) });
@@ -196,9 +196,9 @@ public class GameHostedService : IHostedService
                 "--led-rows=64",
                 "--led-cols=64",
                 "--led-gpio-mapping=adafruit-hat-pwm",
-                "--led-no-hardware-pulse",
                 "--led-slowdown-gpio=3",
-                "--led-brightness=15"
+                "--led-brightness=20",
+                "--led-no-drop-privs"
             }).ExecuteAsync();
 
         _cubeCtx.State = State.Idle;
@@ -208,12 +208,8 @@ public class GameHostedService : IHostedService
     {
         do
         {
-            await _bus.Publish(new StatusTick(_gameCtx.Score, _gameCtx.StepsLeft));
-            Thread.Sleep(1000);
+            await _bus.Publish(new StatusTicked(_gameCtx.Score, _gameCtx.StepsLeft));
+            await Task.Delay(1000);
         } while (!_gameCtx.Dead);
     }
 }
-
-public record GameStarted;
-public record StatusTick(int Score, int StepsLeft);
-public record GameEnded(int Score);
