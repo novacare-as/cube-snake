@@ -22,19 +22,18 @@ public class GameHostedService : IHostedService
     public GameHostedService(
         ILogger<GameHostedService> logger,
         IBus bus,
-        CubeContext cubeContext,
         ScreenSaver screenSaver)
     {
         _logger = logger;
         _bus = bus;
-        _cubeCtx = cubeContext;
+        _cubeCtx = new CubeContext();
         _screenSaver = screenSaver;
         _game = new Game();
     }
     public Task StartAsync(CancellationToken cancellationToken)
     {
         Task.Run(_screenSaver.StartCycle, cancellationToken);
-        ConnectGamepad(cancellationToken);
+        Task.Run(() => ReconnectController(cancellationToken), cancellationToken);
         return Task.CompletedTask;
     }
     
@@ -193,5 +192,16 @@ public class GameHostedService : IHostedService
             await _bus.Publish(new StatusTicked(_gameCtx.Score, _gameCtx.StepsLeft));
             await Task.Delay(1000);
         } while (!_gameCtx.Dead);
+    }
+    
+    private async Task ReconnectController(CancellationToken cancellationToken)
+    {
+        do
+        {
+            await Task.Delay(60000, cancellationToken);
+            if (_cubeCtx.State != State.Idle) continue;
+            _gamepad.Dispose();
+            ConnectGamepad(cancellationToken);
+        } while (!cancellationToken.IsCancellationRequested);
     }
 }
