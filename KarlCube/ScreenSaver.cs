@@ -77,7 +77,7 @@ public class ScreenSaver : IDisposable
     public void Dispose()
     {
         IsPlayingGame = true;
-        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource?.Cancel();
     }
 }
 

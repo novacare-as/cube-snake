@@ -32,8 +32,9 @@ public class GameHostedService : IHostedService
     }
     public Task StartAsync(CancellationToken cancellationToken)
     {
+        ConnectGamepad(cancellationToken);
         Task.Run(_screenSaver.StartCycle, cancellationToken);
-        Task.Run(() => ReconnectController(cancellationToken), cancellationToken);
+        ReconnectController(cancellationToken);
         return Task.CompletedTask;
     }
     
@@ -69,7 +70,7 @@ public class GameHostedService : IHostedService
         }
         catch (ArgumentException e)
         {
-            _logger.LogWarning(e, "Controller not found... Retrying in 5 sec");
+            _logger.LogWarning("Controller not found... Retrying in 5 sec");
             cancellationToken.WaitHandle.WaitOne(5000);
             if (cancellationToken.IsCancellationRequested) return;
             ConnectGamepad(cancellationToken);
@@ -194,11 +195,11 @@ public class GameHostedService : IHostedService
         } while (!_gameCtx.Dead);
     }
     
-    private async Task ReconnectController(CancellationToken cancellationToken)
+    private void ReconnectController(CancellationToken cancellationToken)
     {
         do
         {
-            await Task.Delay(60000, cancellationToken);
+            cancellationToken.WaitHandle.WaitOne(5000);
             if (_cubeCtx.State != State.Idle) continue;
             _gamepad.Dispose();
             ConnectGamepad(cancellationToken);
