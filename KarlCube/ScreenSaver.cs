@@ -1,17 +1,20 @@
 using CliWrap;
+using Microsoft.Extensions.Logging;
 
 namespace KarlCube;
 
-public class ScreenSaver
+public class ScreenSaver : IDisposable
 {
-    private readonly CubeContext _cubeContext;
+    private readonly ILogger<ScreenSaver> _logger;
     private const string ImageViewer = "/home/pi/rpi-rgb-led-matrix/utils/led-image-viewer";
     private const string Demo = "/home/pi/rpi-rgb-led-matrix/examples-api-use/demo";
+    private bool IsPlayingGame; 
 
     private readonly ScreenSaverCommand _defaultScreenSaverCommand = new(ImageViewer, new []
     {
         "/home/pi/workshop/cube-snake/KarlCube/images/martin_test02_5_sides.gif",
-        "--led-brightness=10"
+        "--led-brightness=30",
+        "--led-chain=5"
     });
     private readonly IEnumerable<ScreenSaverCommand> _randomScreenSaverCommands = new[]
     {
@@ -43,35 +46,38 @@ public class ScreenSaver
         "--led-no-drop-privs"
     };
 
-    public ScreenSaver(CubeContext cubeContext)
+    public ScreenSaver(ILogger<ScreenSaver> logger)
     {
-        _cubeContext = cubeContext;
+        _logger = logger;
     }
 
     public async Task StartCycle()
     {
         var displayDefault = true;
+        IsPlayingGame = false;
         do
         {
             var rnd = new Random();
             var command = displayDefault ? _defaultScreenSaverCommand : _randomScreenSaverCommands.ElementAt(rnd.Next(0, _randomScreenSaverCommands.Count()));
+            _logger.LogInformation(command.Command);
             _cancellationTokenSource = new CancellationTokenSource();
-            _cancellationTokenSource.CancelAfter(60000);
-            await ExecuteScreenSaverCommand(command);
+            _cancellationTokenSource.CancelAfter(30000);
+
+            try {
+                await Cli.Wrap(command.Command)
+                    .WithArguments(command.Args.Concat(_defaultCliArgs))
+                    .ExecuteAsync(_cancellationTokenSource.Token);
+            } catch (OperationCanceledException){
+            }
+
             displayDefault = !displayDefault;
-        } while (_cubeContext.State == State.Idle);
+        } while (!IsPlayingGame);
     }
     
     public void Dispose()
     {
-        _cancellationTokenSource.Dispose();
-    }
-
-    private Task ExecuteScreenSaverCommand(ScreenSaverCommand screenSaverCommand)
-    {
-        return Cli.Wrap(screenSaverCommand.Command)
-            .WithArguments(screenSaverCommand.Args.Concat(_defaultCliArgs))
-            .ExecuteAsync(_cancellationTokenSource.Token);
+        IsPlayingGame = true;
+        _cancellationTokenSource.Cancel();
     }
 }
 

@@ -79,6 +79,7 @@ public class GameHostedService : IHostedService
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
+        _screenSaver.Dispose();
         _gamepad.Dispose();
         return Task.CompletedTask;
     }
