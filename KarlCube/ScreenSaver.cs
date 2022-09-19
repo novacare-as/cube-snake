@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace KarlCube;
 
-public class ScreenSaver : IDisposable
+public class ScreenSaver
 {
     private readonly ILogger<ScreenSaver> _logger;
     private const string ImageViewer = "/home/pi/rpi-rgb-led-matrix/utils/led-image-viewer";
@@ -13,7 +13,7 @@ public class ScreenSaver : IDisposable
     private readonly ScreenSaverCommand _defaultScreenSaverCommand = new(ImageViewer, new []
     {
         "/home/pi/workshop/cube-snake/KarlCube/images/martin_test02_5_sides.gif",
-        "--led-brightness=30",
+        "--led-brightness=10",
         "--led-chain=5"
     });
     private readonly IEnumerable<ScreenSaverCommand> _randomScreenSaverCommands = new[]
@@ -22,6 +22,21 @@ public class ScreenSaver : IDisposable
         {
             "/home/pi/workshop/cube-snake/KarlCube/images/this-is-fine.gif",
             "--led-brightness=10"
+        }),
+        new ScreenSaverCommand(ImageViewer, new []
+        {
+            "/home/pi/workshop/cube-snake/KarlCube/images/matrix-code.gif",
+            "--led-brightness=10"
+        }),
+        new ScreenSaverCommand(ImageViewer, new []
+        {
+            "/home/pi/workshop/cube-snake/KarlCube/images/star-wars.gif",
+            "--led-brightness=30"
+        }),
+        new ScreenSaverCommand(ImageViewer, new []
+        {
+            "/home/pi/workshop/cube-snake/KarlCube/images/outline.gif",
+            "--led-brightness=50"
         }),
         new ScreenSaverCommand(Demo, new []
         {
@@ -59,10 +74,8 @@ public class ScreenSaver : IDisposable
         {
             var rnd = new Random();
             var command = displayDefault ? _defaultScreenSaverCommand : _randomScreenSaverCommands.ElementAt(rnd.Next(0, _randomScreenSaverCommands.Count()));
-            _logger.LogInformation(command.Command);
             _cancellationTokenSource = new CancellationTokenSource();
-            _cancellationTokenSource.CancelAfter(30000);
-
+            _cancellationTokenSource.CancelAfter(30_000);
             try {
                 await Cli.Wrap(command.Command)
                     .WithArguments(command.Args.Concat(_defaultCliArgs))
@@ -78,6 +91,7 @@ public class ScreenSaver : IDisposable
     {
         IsPlayingGame = true;
         _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
     }
 }
 

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Cube.Contracts;
 using Color = rpi_rgb_led_matrix_sharp.Color;
+using System.IO;
 
 namespace KarlCube;
 
@@ -16,7 +17,7 @@ public class GameHostedService : IHostedService
     private readonly Game _game;
     private readonly CubeContext _cubeCtx;
     private readonly ScreenSaver _screenSaver;
-    private GamepadController _gamepad;
+    private GamepadController Gamepad {get;set;} 
     private GameContext _gameCtx;
 
     public GameHostedService(
@@ -32,26 +33,19 @@ public class GameHostedService : IHostedService
     }
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        ConnectGamepad(cancellationToken);
+        ReconnectGamepad(cancellationToken);
         Task.Run(_screenSaver.StartCycle, cancellationToken);
-        ReconnectController(cancellationToken);
+        ReconnectGamepadLoop(cancellationToken);
         return Task.CompletedTask;
     }
     
-    private void ConnectGamepad(CancellationToken cancellationToken)
+    private void ReconnectGamepad(CancellationToken cancellationToken)
     {
         try
         {
-            _gamepad = new GamepadController();
-            _gamepad.ButtonChanged += (_, e) =>
-            {
-                if (e.Button == 9 && e.Pressed && _cubeCtx.State == State.Idle)
-                {
-                    Task.Run(PlayGame, cancellationToken);
-                }
-            };
+            Gamepad = new GamepadController();
 
-            _gamepad.AxisChanged += (_, e) =>
+            Gamepad.AxisChanged += (_, e) =>
             {
                 if (e.Axis is not (0 or 2)) return;
                 switch (e.Value)
@@ -67,20 +61,28 @@ public class GameHostedService : IHostedService
                         break;
                 }
             };
+            Gamepad.ButtonChanged += (_, e) =>
+            {
+                if (e.Button == 9 && e.Pressed && _cubeCtx.State == State.Idle)
+                {
+                    Task.Run(PlayGame, cancellationToken);
+                }
+            };
+            
         }
         catch (ArgumentException e)
         {
             _logger.LogWarning("Controller not found... Retrying in 5 sec");
             cancellationToken.WaitHandle.WaitOne(5000);
             if (cancellationToken.IsCancellationRequested) return;
-            ConnectGamepad(cancellationToken);
+            ReconnectGamepad(cancellationToken);
         }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _screenSaver.Dispose();
-        _gamepad.Dispose();
+        Gamepad.Dispose();
         return Task.CompletedTask;
     }
 
@@ -89,7 +91,6 @@ public class GameHostedService : IHostedService
         _cubeCtx.State = State.Playing;
         _screenSaver.Dispose();
         await _bus.Publish(new GameStarted());
-
         await Cli.Wrap("/home/pi/rpi-rgb-led-matrix/utils/led-image-viewer")
             .WithArguments(new[]
             {
@@ -195,14 +196,18 @@ public class GameHostedService : IHostedService
         } while (!_gameCtx.Dead);
     }
     
-    private void ReconnectController(CancellationToken cancellationToken)
+    private void ReconnectGamepadLoop(CancellationToken cancellationToken)
     {
         do
         {
-            cancellationToken.WaitHandle.WaitOne(5000);
+            cancellationToken.WaitHandle.WaitOne(30_000);
             if (_cubeCtx.State != State.Idle) continue;
-            _gamepad.Dispose();
-            ConnectGamepad(cancellationToken);
+            if (!File.Exists("/dev/input/js0"))
+            {
+                Gamepad.Dispose();
+                ReconnectGamepad(cancellationToken);
+            }
+            
         } while (!cancellationToken.IsCancellationRequested);
     }
 }
