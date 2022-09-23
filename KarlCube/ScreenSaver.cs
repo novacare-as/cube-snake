@@ -12,8 +12,8 @@ public class ScreenSaver
 
     private readonly ScreenSaverCommand _defaultScreenSaverCommand = new(ImageViewer, new []
     {
-        "/home/pi/workshop/cube-snake/KarlCube/images/martin_test02_5_sides.gif",
-        "--led-brightness=10",
+        "/home/pi/workshop/cube-snake/KarlCube/images/martin_test03_5_sides.gif",
+        "--led-brightness=80",
         "--led-chain=5"
     });
     private readonly IEnumerable<ScreenSaverCommand> _randomScreenSaverCommands = new[]
@@ -21,7 +21,17 @@ public class ScreenSaver
         new ScreenSaverCommand(ImageViewer, new []
         {
             "/home/pi/workshop/cube-snake/KarlCube/images/this-is-fine.gif",
-            "--led-brightness=10"
+            "--led-brightness=30"
+        }),
+        new ScreenSaverCommand(ImageViewer, new []
+        {
+            "/home/pi/workshop/cube-snake/KarlCube/images/circle.gif",
+            "--led-brightness=50"
+        }),
+        new ScreenSaverCommand(ImageViewer, new []
+        {
+            "/home/pi/workshop/cube-snake/KarlCube/images/illusioncolor.gif",
+            "--led-brightness=30"
         }),
         new ScreenSaverCommand(ImageViewer, new []
         {
@@ -31,23 +41,22 @@ public class ScreenSaver
         new ScreenSaverCommand(ImageViewer, new []
         {
             "/home/pi/workshop/cube-snake/KarlCube/images/star-wars.gif",
-            "--led-brightness=30"
+            "--led-brightness=40"
         }),
         new ScreenSaverCommand(ImageViewer, new []
         {
-            "/home/pi/workshop/cube-snake/KarlCube/images/outline.gif",
-            "--led-brightness=50"
+            "/home/pi/workshop/cube-snake/KarlCube/images/outline.gif"
         }),
         new ScreenSaverCommand(Demo, new []
         {
             "-D7",
-            "--led-brightness=40",
+            "--led-brightness=60",
             "--led-chain=5"
         }),
         new ScreenSaverCommand(Demo, new []
         {
             "-D4",
-            "--led-brightness=20",
+            "--led-brightness=40",
             "--led-chain=5"
         })
     };
@@ -57,7 +66,7 @@ public class ScreenSaver
         "--led-rows=64",
         "--led-cols=64",
         "--led-gpio-mapping=adafruit-hat-pwm",
-        "--led-slowdown-gpio=3",
+        "--led-slowdown-gpio=2",
         "--led-no-drop-privs"
     };
 

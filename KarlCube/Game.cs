@@ -22,7 +22,8 @@ public class Game
             Position = (Matrix/2, Matrix/2),
             Score = 0,
             StepsLeft = 800,
-            Dead = false
+            Dead = false,
+            GrowBy = 0
         };
     }
 
@@ -52,10 +53,11 @@ public class Game
             {
                 GameObject.Ground => context with
                 {
-                    Map = ModifyHitGround(context.Map, (newX, newY), direction),
+                    Map = ModifyHitGround(context.Map, (newX, newY), direction, context.GrowBy),
                     Position = (newX, newY),
                     StepsLeft = context.StepsLeft - 1,
-                    Direction = direction
+                    Direction = direction,
+                    GrowBy = context.GrowBy > 0 ? context.GrowBy - 1 : 0
                 },
                 GameObject.Snake => context with
                 {
@@ -69,6 +71,7 @@ public class Game
                     Position = (newX, newY),
                     StepsLeft = context.StepsLeft + 200,
                     Score = context.Score + 10,
+                    GrowBy = context.GrowBy + 10,
                     Direction = direction
                 },
                 _ => throw new ArgumentOutOfRangeException()
@@ -162,11 +165,13 @@ public class Game
         return map;
     }
 
-    private static (GameObject, Direction)[,] ModifyHitGround((GameObject, Direction)[,] map, (int x, int y) position, Direction direction)
+    private static (GameObject, Direction)[,] ModifyHitGround((GameObject, Direction)[,] map, (int x, int y) position, Direction direction, int growBy)
     {
         map[position.x, position.y] = (GameObject.Snake, direction);
-        var (tailX, tailY) = FindTail(map, position);
-        map[tailX, tailY] = (GameObject.Ground, Direction.None);
+        if (growBy == 0) {
+            var (tailX, tailY) = FindTail(map, position);
+            map[tailX, tailY] = (GameObject.Ground, Direction.None);
+        }
         return map;
     }
 

@@ -100,8 +100,8 @@ public class GameHostedService : IHostedService
                 "--led-rows=64",
                 "--led-cols=64",
                 "--led-gpio-mapping=adafruit-hat-pwm",
-                "--led-slowdown-gpio=3",
-                "--led-brightness=20",
+                "--led-slowdown-gpio=2",
+                "--led-brightness=40",
                 "--led-no-drop-privs"
             }).ExecuteAsync();
 
@@ -111,11 +111,8 @@ public class GameHostedService : IHostedService
             Rows = 64,
             ChainLength = 5,
             HardwareMapping = "adafruit-hat-pwm",
-            Brightness = 50,
-            PwmDitherBits = 1,
-            PwmLsbNanoseconds = 50,
-            PwmBits = 7,
-            GpioSlowdown = 3,
+            Brightness = 80,
+            GpioSlowdown = 2,
             DropPrivileges = false
         });
         
@@ -178,8 +175,8 @@ public class GameHostedService : IHostedService
                 "--led-rows=64",
                 "--led-cols=64",
                 "--led-gpio-mapping=adafruit-hat-pwm",
-                "--led-slowdown-gpio=3",
-                "--led-brightness=20",
+                "--led-slowdown-gpio=2",
+                "--led-brightness=50",
                 "--led-no-drop-privs"
             }).ExecuteAsync();
 
