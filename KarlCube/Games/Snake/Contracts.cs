@@ -1,4 +1,4 @@
-namespace Cube.Contracts;
+namespace KarlCube.Games.Snake;
 
 public record GameStarted;
 public record StatusTicked(int Score, int StepsLeft);

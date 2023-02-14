@@ -1,6 +1,8 @@
-namespace KarlCube;
+using KarlCube.Games.Shared;
 
-public class Game
+namespace KarlCube.Games.Snake;
+
+public class SnakeGame
 {
     private const int Matrix = 64;
     private const int Rows = Matrix*5;
@@ -43,7 +45,7 @@ public class Game
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        var (newX, newY, direction) = FindNextPosition((x, y), (nx, ny), context.Direction);
+        var (newX, newY, direction) = GetDirection.FindNextPosition((x, y), (nx, ny), context.Direction);
         
         try
         {
@@ -82,81 +84,7 @@ public class Game
             return context with {Dead = true};
         }
     }
-
-    private static (int, int, Direction) FindNextPosition((int x, int y) oldPosition, (int newX, int newY) newPosition, Direction direction)
-    {
-        var (x, y) = oldPosition;
-        var (newX, newY) = newPosition;
-
-        if (newX == Matrix*5 && x == Matrix*5-1)
-        {
-            return (Matrix, newY, direction);
-        }
-        if (newX == Matrix-1 && x == Matrix)
-        {
-            return (Matrix*5-1, newY, direction);
-        }
-
-        if (newY is -1 // Might go to top or to side 96-128 if already on top
-            || (y == Matrix-1 && newY == Matrix) // From top and goes over the edge to side 32-64
-            || newX is -1 or Matrix) // From top to 128-160 (if x is 32) or 64-96 (if x is -1)
-        {
-            var side = (int) Math.Floor((decimal) (x / Matrix));
-            if (side is 0)
-            {
-                switch (newY)
-                {
-                    case -1:
-                        return (Matrix*3 + Math.Abs(Matrix-1 - newX), 0, Direction.Right);
-                    case Matrix:
-                        return (Matrix*1 + newX, 0, Direction.Right);
-                }
-                switch (newX)
-                {
-                    case -1:
-                        return (Matrix*4 + newY, 0, Direction.Right);
-                    case Matrix:
-                        return (Matrix*2 + Math.Abs(Matrix-1 - newY), 0, Direction.Right);
-                }
-            }
-
-            if (side is 1)
-            {
-                if (newY == -1)
-                {
-                    return (newX - Matrix, Matrix-1, Direction.Left);
-                }
-            }
-            
-            if (side is 3)
-            {
-                if (newY == -1)
-                {
-                    return (Math.Abs(Matrix-1 - (newX - Matrix*3)), 0, Direction.Right);
-                }
-            }
-            
-            if (side is 2)
-            {
-                if (newY == -1)
-                {
-                    return (Matrix-1, Math.Abs(Matrix-1 - (newX - Matrix*2)), Direction.Up);
-                }
-            }
-            
-            if (side is 4)
-            {
-                if (newY == -1)
-                {
-                    return (0, newX - Matrix*4, Direction.Down);
-                }
-            }
-            
-        }
-
-        return (newX, newY, direction);
-    }
-
+    
     private (GameObject, Direction)[,] ModifyHitFood((GameObject, Direction)[,] map, (int x, int y) position, Direction direction)
     {
         map[position.x, position.y] = (GameObject.Snake, direction);
@@ -188,7 +116,7 @@ public class Game
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        var (newX, newY, _) = FindNextPosition((position.x, position.y), (nx, ny), dir);
+        var (newX, newY, _) = GetDirection.FindNextPosition((position.x, position.y), (nx, ny), dir);
         var (obj, _) = map[newX, newY];
 
         if (obj == GameObject.Snake)
