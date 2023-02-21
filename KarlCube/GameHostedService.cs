@@ -1,5 +1,4 @@
 using CliWrap;
-using Gamepad;
 using KarlCube.Games.Achtung;
 using MassTransit;
 using rpi_rgb_led_matrix_sharp;
@@ -23,7 +22,6 @@ public class GameHostedService : IHostedService
     private AchtungGameContext _achtungGameCtx;
     private readonly CubeContext _cubeCtx;
     private readonly ScreenSaver _screenSaver;
-    private GamepadController Gamepad {get;set;} 
 
     public GameHostedService(
         ILogger<GameHostedService> logger,
@@ -39,60 +37,58 @@ public class GameHostedService : IHostedService
     }
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        ReconnectGamepad(cancellationToken);
+        ConfigureGamepads(cancellationToken);
         Task.Run(_screenSaver.StartCycle, cancellationToken);
-        ReconnectGamepadLoop(cancellationToken);
         return Task.CompletedTask;
     }
     
-    private void ReconnectGamepad(CancellationToken cancellationToken)
+    private void ConfigureGamepads(CancellationToken cancellationToken)
     {
-        try
+        foreach (var player in _cubeCtx.Players)
         {
-            Gamepad = new GamepadController();
-
-            Gamepad.AxisChanged += (_, e) =>
+            player.Gamepad.AxisChanged += (_, e) =>
             {
                 if (e.Axis is not (0 or 2)) return;
                 switch (e.Value)
                 {
                     case 32767:
-                        _cubeCtx.IsTurningLeft = true;
+                        player.IsTurningLeft = true;
                         return;
                     case -32767:
-                        _cubeCtx.IsTurningRight = true;
+                        player.IsTurningRight = true;
                         return;
                     default:
-                        _cubeCtx.IsTurningRight = _cubeCtx.IsTurningLeft = false;
+                        player.IsTurningRight = player.IsTurningLeft = false;
                         break;
                 }
             };
-            Gamepad.ButtonChanged += (_, e) =>
+            
+            player.Gamepad.ButtonChanged += (_, e) =>
             {
-                if (e.Button == 9 && e.Pressed && _cubeCtx.State == State.Idle)
+                switch (e.Button)
                 {
-                    Task.Run(PlaySnake, cancellationToken);
+                    case 9 when e.Pressed && _cubeCtx.State == State.Idle:
+                        Task.Run(() => PlaySnake(player.Id), cancellationToken);
+                        break;
+                    case 8 when e.Pressed && _cubeCtx.State == State.Idle:
+                        Task.Run(PlayAchtung, cancellationToken);
+                        break;
                 }
             };
-            
-        }
-        catch (ArgumentException e)
-        {
-            _logger.LogWarning("Controller not found... Retrying in 5 sec");
-            cancellationToken.WaitHandle.WaitOne(5000);
-            if (cancellationToken.IsCancellationRequested) return;
-            ReconnectGamepad(cancellationToken);
         }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _screenSaver.Dispose();
-        Gamepad.Dispose();
+        foreach (var player in _cubeCtx.Players)
+        {
+            player.Gamepad.Dispose();
+        }
         return Task.CompletedTask;
     }
 
-    private async Task PlaySnake()
+    private async Task PlaySnake(int playerId)
     {
         _cubeCtx.State = State.Playing;
         _screenSaver.Dispose();
@@ -150,15 +146,16 @@ public class GameHostedService : IHostedService
                 }
             }
             await Task.Delay(20);
-            if (_cubeCtx.IsTurningLeft)
+            var player = _cubeCtx.GetActivePlayer(playerId);
+            if (player.IsTurningLeft)
             {
                 _snakeGameCtx = _snakeGame.Loop(_snakeGameCtx with { Direction = GetDirection.TurnLeft(_snakeGameCtx.Direction) });
-                _cubeCtx.IsTurningLeft = false;
+                player.IsTurningLeft = false;
             }
-            else if (_cubeCtx.IsTurningRight)
+            else if (player.IsTurningRight)
             {
                 _snakeGameCtx = _snakeGame.Loop(_snakeGameCtx with { Direction = GetDirection.TurnRight(_snakeGameCtx.Direction) });
-                _cubeCtx.IsTurningRight= false;
+                player.IsTurningRight = false;
             }
             else
             {
@@ -226,32 +223,33 @@ public class GameHostedService : IHostedService
         {
             foreach (var player in _achtungGameCtx.Players)
             {
-                var (x, y) = player.Position;
-                var (r, g, b) = player.Color;
-                canvas.SetPixel(x, y, new Color(r, g, b));
+                if (player.MakeGap == 0)
+                {
+                    var (x, y) = player.Position;
+                    var (r, g, b) = player.Color;
+                    canvas.SetPixel(x, y, new Color(r, g, b));
+                }
+                
+                var gamepad = _cubeCtx.GetActivePlayer(player.Id);
+                if (gamepad.IsTurningLeft)
+                {
+                    player.Direction = GetDirection.TurnLeft(player.Direction);
+                    gamepad.IsTurningLeft = false;
+                }
+                else if (gamepad.IsTurningRight)
+                {
+                    player.Direction = GetDirection.TurnRight(player.Direction);
+                    gamepad.IsTurningRight = false;
+                }
             }
+
+            _achtungGameCtx = _achtungGame.Loop(_achtungGameCtx);
             await Task.Delay(20);
-            if (_cubeCtx.IsTurningLeft)
-            {
-                _achtungGameCtx = _achtungGame.Loop(_achtungGameCtx);
-                _cubeCtx.IsTurningLeft = false;
-            }
-            else if (_cubeCtx.IsTurningRight)
-            {
-                _snakeGameCtx = _snakeGame.Loop(_snakeGameCtx with { Direction = GetDirection.TurnRight(_snakeGameCtx.Direction) });
-                _cubeCtx.IsTurningRight= false;
-            }
-            else
-            {
-                _snakeGameCtx = _snakeGame.Loop(_snakeGameCtx);
-            }
             canvas = matrix.SwapOnVsync(canvas);
         } while (!_achtungGameCtx.Players.Any(p => p.Dead));
         
         canvas.Clear();
         matrix.Dispose();
-        
-        await _bus.Publish(new GameEnded(_snakeGameCtx.Score));
 
         await Cli.Wrap("/home/pi/rpi-rgb-led-matrix/utils/led-image-viewer")
             .WithArguments(new[]
@@ -278,20 +276,5 @@ public class GameHostedService : IHostedService
             await _bus.Publish(new StatusTicked(_snakeGameCtx.Score, _snakeGameCtx.StepsLeft));
             await Task.Delay(1000);
         } while (!_snakeGameCtx.Dead);
-    }
-    
-    private void ReconnectGamepadLoop(CancellationToken cancellationToken)
-    {
-        do
-        {
-            cancellationToken.WaitHandle.WaitOne(30_000);
-            if (_cubeCtx.State != State.Idle) continue;
-            if (!File.Exists("/dev/input/js0"))
-            {
-                Gamepad.Dispose();
-                ReconnectGamepad(cancellationToken);
-            }
-            
-        } while (!cancellationToken.IsCancellationRequested);
     }
 }

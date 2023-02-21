@@ -24,11 +24,14 @@ public class AchtungGame
 
         var playerOne = new Player
         {
+            Id = 1,
             Direction = Direction.Up,
             Position = (Matrix * 2 + Matrix / 2, Matrix / 2),
             Color = RandomBrightColor()
         };
-        var playerTwo = new Player{
+        var playerTwo = new Player
+        {
+            Id = 2,
             Direction = Direction.Down,
             Position = (Matrix * 4 + Matrix / 2, Matrix / 2),
             Color = RandomBrightColor()
@@ -38,7 +41,11 @@ public class AchtungGame
         return new AchtungGameContext
         {
             Map = map,
-            Players = new []{ playerOne, playerTwo }
+            Players = new []
+            {
+                playerOne,
+                playerTwo
+            }
         };
     }
     

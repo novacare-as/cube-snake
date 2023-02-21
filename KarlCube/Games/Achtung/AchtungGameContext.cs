@@ -10,9 +10,10 @@ public record AchtungGameContext
 
 public record Player
 {
+    public int Id { get; init; }
     public Direction Direction { get; set; }
     public (int, int) Position { get; set; }
-    public (int, int, int) Color { get; set; }
+    public (int, int, int) Color { get; init; }
     public int MakeGap { get; set; }
     public bool Dead { get; set; }
 }
