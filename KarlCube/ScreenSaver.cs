@@ -10,11 +10,27 @@ public class ScreenSaver
     private const string Demo = "/home/pi/rpi-rgb-led-matrix/examples-api-use/demo";
     private bool IsPlayingGame; 
 
+
+    private CancellationTokenSource _cancellationTokenSource;
+
+    private readonly string[] _defaultCliArgs = {
+        "--led-rows=64",
+        "--led-cols=64",
+        "--led-gpio-mapping=adafruit-hat-pwm",
+        "--led-slowdown-gpio=2",
+        "--led-no-drop-privs"
+    };
+
+    public ScreenSaver(ILogger<ScreenSaver> logger)
+    {
+        _logger = logger;
+    }
+
     private readonly ScreenSaverCommand _defaultScreenSaverCommand = new(ImageViewer, new []
     {
-        "/home/pi/workshop/cube-snake/KarlCube/images/martin_test03_5_sides.gif",
-        "--led-brightness=80",
-        "--led-chain=5"
+        "/home/pi/workshop/cube-snake/KarlCube/images/martin_snake_5_sides.gif",
+            "--led-brightness=80",
+            "--led-chain=5"
     });
     private readonly IEnumerable<ScreenSaverCommand> _randomScreenSaverCommands = new[]
     {
@@ -35,11 +51,6 @@ public class ScreenSaver
         }),
         new ScreenSaverCommand(ImageViewer, new []
         {
-            "/home/pi/workshop/cube-snake/KarlCube/images/matrix-code.gif",
-            "--led-brightness=10"
-        }),
-        new ScreenSaverCommand(ImageViewer, new []
-        {
             "/home/pi/workshop/cube-snake/KarlCube/images/star-wars.gif",
             "--led-brightness=40"
         }),
@@ -52,27 +63,54 @@ public class ScreenSaver
             "-D7",
             "--led-brightness=60",
             "--led-chain=5"
+        })
+    };
+    private readonly IEnumerable<ScreenSaverCommand> _christmasScreenSaverCommands = new[]
+    {
+        new ScreenSaverCommand(ImageViewer, new []
+        {
+            "/home/pi/workshop/cube-snake/KarlCube/images/campfire.gif",
+            "--led-brightness=50"
+        }),
+        new ScreenSaverCommand(ImageViewer, new []
+        {
+            "/home/pi/workshop/cube-snake/KarlCube/images/grinch.gif",
+            "--led-brightness=30"
+        }),
+        new ScreenSaverCommand(ImageViewer, new []
+        {
+            "/home/pi/workshop/cube-snake/KarlCube/images/merry-christmas.gif",
+            "--led-brightness=80"
+        }),
+        new ScreenSaverCommand(ImageViewer, new []
+        {
+            "/home/pi/workshop/cube-snake/KarlCube/images/parrot.gif",
+            "--led-brightness=60"
+        }),
+        new ScreenSaverCommand(ImageViewer, new []
+        {
+            "/home/pi/workshop/cube-snake/KarlCube/images/santa.gif",
+            "--led-brightness=30"
+        }),
+        new ScreenSaverCommand(ImageViewer, new []
+        {
+            "-D 100",
+            "/home/pi/workshop/cube-snake/KarlCube/images/snowman.gif",
+            "--led-brightness=70"
         }),
         new ScreenSaverCommand(Demo, new []
         {
-            "-D4",
-            "--led-brightness=40",
+            "-D7",
+            "--led-brightness=60",
             "--led-chain=5"
         })
     };
-    private CancellationTokenSource _cancellationTokenSource;
 
-    private readonly string[] _defaultCliArgs = {
-        "--led-rows=64",
-        "--led-cols=64",
-        "--led-gpio-mapping=adafruit-hat-pwm",
-        "--led-slowdown-gpio=2",
-        "--led-no-drop-privs"
-    };
-
-    public ScreenSaver(ILogger<ScreenSaver> logger)
+    private IEnumerable<ScreenSaverCommand> GetTimeAppropriateScreenSavers()
     {
-        _logger = logger;
+        var now = DateTime.Now;
+
+        return now.Month > 11 ? _christmasScreenSaverCommands : _randomScreenSaverCommands;
     }
 
     public async Task StartCycle()
@@ -82,7 +120,8 @@ public class ScreenSaver
         do
         {
             var rnd = new Random();
-            var command = displayDefault ? _defaultScreenSaverCommand : _randomScreenSaverCommands.ElementAt(rnd.Next(0, _randomScreenSaverCommands.Count()));
+            var screensavers = GetTimeAppropriateScreenSavers();
+            var command = displayDefault ? _defaultScreenSaverCommand : screensavers.ElementAt(rnd.Next(0, screensavers.Count()));
             _cancellationTokenSource = new CancellationTokenSource();
             _cancellationTokenSource.CancelAfter(30_000);
             try {

@@ -97,13 +97,13 @@ public class SnakeGame
     {
         map[position.x, position.y] = (GameObject.Snake, direction);
         if (growBy == 0) {
-            var (tailX, tailY) = FindTail(map, position);
+            var (tailX, tailY) = FindTail(map, position, position);
             map[tailX, tailY] = (GameObject.Ground, Direction.None);
         }
         return map;
     }
 
-    private static (int, int) FindTail((GameObject, Direction)[,] map, (int x, int y) position)
+    private static (int, int) FindTail((GameObject, Direction)[,] map, (int x, int y) position, (int x, int y) headposition)
     {
         var (_, dir) = map[position.x, position.y];
         var (nx, ny) = dir switch
@@ -119,9 +119,13 @@ public class SnakeGame
         var (newX, newY, _) = GetDirection.FindNextPosition((position.x, position.y), (nx, ny), dir);
         var (obj, _) = map[newX, newY];
 
+        if (newX == headposition.x && newY == headposition.y){
+            throw new Exception("Chickening out. Avoiding recursive loop...");
+        }
+
         if (obj == GameObject.Snake)
         {
-            return FindTail(map, (newX, newY));
+            return FindTail(map, (newX, newY), headposition);
         }
 
         return position;

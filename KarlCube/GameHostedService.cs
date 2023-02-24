@@ -48,7 +48,7 @@ public class GameHostedService : IHostedService
         {
             player.Gamepad.AxisChanged += (_, e) =>
             {
-                if (e.Axis is not (0 or 2)) return;
+                if (e.Axis is not (0 or 2 or 6)) return;
                 switch (e.Value)
                 {
                     case 32767:
@@ -67,10 +67,10 @@ public class GameHostedService : IHostedService
             {
                 switch (e.Button)
                 {
-                    case 9 when e.Pressed && _cubeCtx.State == State.Idle:
+                    case 11 when e.Pressed && _cubeCtx.State == State.Idle:
                         Task.Run(() => PlaySnake(player.Id), cancellationToken);
                         break;
-                    case 8 when e.Pressed && _cubeCtx.State == State.Idle:
+                    case 10 when e.Pressed && _cubeCtx.State == State.Idle:
                         Task.Run(PlayAchtung, cancellationToken);
                         break;
                 }
