@@ -26,18 +26,18 @@ public class AchtungGame
         {
             Id = 1,
             Direction = Direction.Up,
-            Position = (Matrix * 2 + Matrix / 2, Matrix / 2),
-            Color = RandomBrightColor()
+            Position = ((Matrix/2) -1, Matrix/2),
+            Color = GameObject.RedDot
         };
         var playerTwo = new Player
         {
             Id = 2,
             Direction = Direction.Down,
-            Position = (Matrix * 4 + Matrix / 2, Matrix / 2),
-            Color = RandomBrightColor()
+            Position = ((Matrix/2) +1, Matrix/2),
+            Color = GameObject.BlueDot
         };
-        map[playerOne.Position.Item1, playerOne.Position.Item2] = GameObject.Dot;
-        map[playerTwo.Position.Item1, playerTwo.Position.Item2] = GameObject.Dot;
+        map[playerOne.Position.Item1, playerOne.Position.Item2] = playerOne.Color;
+        map[playerTwo.Position.Item1, playerTwo.Position.Item2] = playerTwo.Color;
         return new AchtungGameContext
         {
             Map = map,
@@ -54,53 +54,55 @@ public class AchtungGame
         foreach (var player in context.Players)
         {
             var (x, y) = player.Position;
-            var (nx, ny) = player.Direction switch
+            try
             {
-                Direction.Up => (x - 1, y),
-                Direction.Down => (x + 1, y),
-                Direction.Left => (x, y - 1),
-                Direction.Right => (x, y + 1),
-                Direction.None => (x, y),
-                _ => throw new ArgumentOutOfRangeException()
-            };
-
-            var (newX, newY, _) = GetDirection.FindNextPosition((x, y), (nx, ny), player.Direction);
-            var obj = context.Map[newX, newY];
-
-            if (obj == GameObject.Ground)
-            {
-                context.Map = ModifyHitGround(context.Map, (newX, newY), player.MakeGap);
-                player.Position = (newX, newY);
-                if (player.MakeGap != 0) continue;
-                if (RandomNumber(0, 300) == 100)
+                var (nx, ny) = player.Direction switch
                 {
-                    player.MakeGap = 3;
+                    Direction.Up => (x - 1, y),
+                    Direction.Down => (x + 1, y),
+                    Direction.Left => (x, y - 1),
+                    Direction.Right => (x, y + 1),
+                    Direction.None => (x, y),
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+                var (newX, newY, newDirection) = GetDirection.FindNextPosition((x, y), (nx, ny), player.Direction);
+                var obj = context.Map[newX, newY];
+
+                if (obj == GameObject.Ground)
+                {
+                    context.Map = ModifyHitGround(context.Map, player);
+                    player.Position = (newX, newY);
+                    player.Direction = newDirection;
+                    if (player.MakeGap > 0) {
+                        player.MakeGap--;
+                    }
+                    if (player.MakeGap != 0) continue;
+                    if (RandomNumber(0, 300) == 100)
+                    {
+                        player.MakeGap = 3;
+                    }
+                }
+                else
+                {
+                    player.Dead = true;
+                    player.Position = (newX, newY);
                 }
             }
-            else
+            catch (Exception e)
             {
                 player.Dead = true;
-                player.Position = (newX, newY);
             }
         }
         
         return context;
     }
     
-    private static GameObject[,] ModifyHitGround(GameObject[,] map, (int x, int y) position, int makeGap)
+    private static GameObject[,] ModifyHitGround(GameObject[,] map, Player player)
     {
-        if (makeGap == 0)
+        if (player.MakeGap == 0)
         {
-            map[position.x, position.y] = GameObject.Dot;
+            map[player.Position.Item1, player.Position.Item2] = player.Color;
         }
         return map;
-    }
-
-    private static (int, int, int) RandomBrightColor()
-    {
-        var r = RandomNumber(127, 255);
-        var g = RandomNumber(127, 255);
-        var b = RandomNumber(127, 255);
-        return (r, g, b);
     }
 }

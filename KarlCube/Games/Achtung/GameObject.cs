@@ -2,5 +2,5 @@ namespace KarlCube.Games.Achtung;
 
 public enum GameObject
 {
-    Ground, Dot
+    Ground, Dot, RedDot, BlueDot
 }

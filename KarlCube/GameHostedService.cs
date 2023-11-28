@@ -9,6 +9,7 @@ using KarlCube.Games.Shared;
 using KarlCube.Games.Snake;
 using SnakeGameContext = KarlCube.Games.Snake.GameContext;
 using GameObject = KarlCube.Games.Snake.GameObject;
+using Cube.Contracts;
 
 namespace KarlCube;
 
@@ -221,15 +222,31 @@ public class GameHostedService : IHostedService
         
         do
         {
+            for (var x = 0; x < _achtungGameCtx.Map.GetLength(0); x++)
+            {
+                for (var y = 0; y < _achtungGameCtx.Map.GetLength(1); y++)
+                {
+                    var obj = _achtungGameCtx.Map[x, y];
+                    switch (obj)
+                    {
+                        case KarlCube.Games.Achtung.GameObject.Ground:
+                            canvas.SetPixel(x, y, new Color(0, 0, 0));
+                            break;
+                        case KarlCube.Games.Achtung.GameObject.BlueDot:
+                            canvas.SetPixel(x, y, new Color(0, 0, 255));
+                            break;
+                        case KarlCube.Games.Achtung.GameObject.RedDot:
+                            canvas.SetPixel(x, y, new Color(255, 0, 0));
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+            }
+
+            await Task.Delay(30);
             foreach (var player in _achtungGameCtx.Players)
             {
-                if (player.MakeGap == 0)
-                {
-                    var (x, y) = player.Position;
-                    var (r, g, b) = player.Color;
-                    canvas.SetPixel(x, y, new Color(r, g, b));
-                }
-                
                 var gamepad = _cubeCtx.GetActivePlayer(player.Id);
                 if (gamepad.IsTurningLeft)
                 {
@@ -244,26 +261,28 @@ public class GameHostedService : IHostedService
             }
 
             _achtungGameCtx = _achtungGame.Loop(_achtungGameCtx);
-            await Task.Delay(20);
             canvas = matrix.SwapOnVsync(canvas);
         } while (!_achtungGameCtx.Players.Any(p => p.Dead));
         
+        var winner = _achtungGameCtx.Players.First(p => !p.Dead);
+        await _bus.Publish(new MultiPlayerGameEnded(
+            winner.Color == KarlCube.Games.Achtung.GameObject.RedDot ? "red" : "blue"));
+        for (var x = 0; x < _achtungGameCtx.Map.GetLength(0); x++)
+        {
+            for (var y = 0; y < _achtungGameCtx.Map.GetLength(1); y++)
+            {
+                 if(winner.Color == KarlCube.Games.Achtung.GameObject.RedDot){
+                    canvas.SetPixel(x, y, new Color(255, 0, 0));
+                 } else {
+                    canvas.SetPixel(x, y, new Color(0, 0, 255));
+                 }
+            }
+            await Task.Delay(5);
+            canvas = matrix.SwapOnVsync(canvas);
+        }
+        
         canvas.Clear();
         matrix.Dispose();
-
-        await Cli.Wrap("/home/pi/rpi-rgb-led-matrix/utils/led-image-viewer")
-            .WithArguments(new[]
-            {
-                "-l 2",
-                "-D 100",
-                "/home/pi/workshop/cube-snake/KarlCube/images/gameover.gif",
-                "--led-rows=64",
-                "--led-cols=64",
-                "--led-gpio-mapping=adafruit-hat-pwm",
-                "--led-slowdown-gpio=2",
-                "--led-brightness=50",
-                "--led-no-drop-privs"
-            }).ExecuteAsync();
 
         _cubeCtx.State = State.Idle;
         Task.Run(_screenSaver.StartCycle);

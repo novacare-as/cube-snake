@@ -110,7 +110,7 @@ public class ScreenSaver
     {
         var now = DateTime.Now;
 
-        return now.Month > 11 ? _christmasScreenSaverCommands : _randomScreenSaverCommands;
+        return now.Month > 10 ? _christmasScreenSaverCommands : _randomScreenSaverCommands;
     }
 
     public async Task StartCycle()
