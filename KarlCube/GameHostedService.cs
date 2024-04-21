@@ -1,10 +1,10 @@
 using CliWrap;
 using KarlCube.Games.Achtung;
 using MassTransit;
-using rpi_rgb_led_matrix_sharp;
+using RPiRgbLEDMatrix;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Color = rpi_rgb_led_matrix_sharp.Color;
+using Color = RPiRgbLEDMatrix.Color;
 using KarlCube.Games.Shared;
 using KarlCube.Games.Snake;
 using SnakeGameContext = KarlCube.Games.Snake.GameContext;
@@ -162,7 +162,7 @@ public class GameHostedService : IHostedService
             {
                 _snakeGameCtx = _snakeGame.Loop(_snakeGameCtx);
             }
-            canvas = matrix.SwapOnVsync(canvas);
+            matrix.SwapOnVsync(canvas);
         } while (!_snakeGameCtx.Dead);
         
         canvas.Clear();
@@ -261,7 +261,7 @@ public class GameHostedService : IHostedService
             }
 
             _achtungGameCtx = _achtungGame.Loop(_achtungGameCtx);
-            canvas = matrix.SwapOnVsync(canvas);
+            matrix.SwapOnVsync(canvas);
         } while (!_achtungGameCtx.Players.Any(p => p.Dead));
         
         var winner = _achtungGameCtx.Players.First(p => !p.Dead);
@@ -278,7 +278,7 @@ public class GameHostedService : IHostedService
                  }
             }
             await Task.Delay(5);
-            canvas = matrix.SwapOnVsync(canvas);
+            matrix.SwapOnVsync(canvas);
         }
         
         canvas.Clear();
