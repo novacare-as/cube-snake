@@ -1,4 +1,6 @@
-using KarlCube;
+using KarlCube.Games.Shared;
+
+namespace KarlCube.Games.Snake;
 
 public record GameContext
 {

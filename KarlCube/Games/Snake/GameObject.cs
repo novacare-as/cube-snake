@@ -1,4 +1,4 @@
-namespace KarlCube;
+namespace KarlCube.Games.Snake;
 
 public enum GameObject
 {

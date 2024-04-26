@@ -1,4 +1,4 @@
-namespace KarlCube;
+namespace KarlCube.Games.Shared;
 
 public enum Direction
 {
